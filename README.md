@@ -70,6 +70,10 @@ Client
 | Observability | Prometheus + Grafana |
 | Load Testing | k6 |
 | Infrastructure | Docker Compose |
+| Optional Orchestration | Kubernetes manifests (`deployments/k8s/`) |
+| Optional Cloud Demo | Terraform AWS EC2 demo + Ansible automation |
+| CI | GitHub Actions |
+| Dev tooling | air (live reload), golangci-lint, Nix flake |
 
 ## API Endpoints
 
@@ -90,6 +94,7 @@ All protection/optimization layers are toggled via environment variables. Baseli
 | `RATE_LIMIT_ENABLED` | `false` | Token bucket rate limiting |
 | `CIRCUIT_BREAKER_ENABLED` | `false` | Fail-fast on unhealthy downstream |
 | `DB_READ_REPLICA_ENABLED` | `false` | Route reads to replica |
+| `APP_MEMORY_LIMIT_BYTES` | `512MiB fallback` | Optional memory limit used by app runtime utilization metrics |
 
 See [Development Guide](docs/development.md) for the full environment variable reference.
 
@@ -144,6 +149,28 @@ docker compose --profile optimized --profile observability up -d
 | `docker compose --profile observability up` | + Prometheus, Grafana |
 | `docker compose --profile optimized --profile observability up` | Full stack |
 
+## Cloud Demo
+
+The repo also includes an optional AWS EC2 demo under `deployments/terraform/cloud-demo/` plus Ansible playbooks under `deployments/ansible/`. These files are for demonstration and presentation runs, not for production banking infrastructure.
+
+```bash
+cp .env.cloud.example .env.cloud
+cd deployments/terraform/cloud-demo
+cp terraform.tfvars.example terraform.tfvars
+terraform init
+terraform plan
+```
+
+After Terraform provisions hosts, use the dynamic inventory and Ansible playbooks to configure the app and k6 runner:
+
+```bash
+cd ../../..
+ansible-playbook -i deployments/ansible/inventories/terraform_inventory.py deployments/ansible/site.yml
+ansible-playbook -i deployments/ansible/inventories/terraform_inventory.py deployments/ansible/deploy.yml
+```
+
+Helper scripts for cloud demo operations live in `scripts/cloud/`.
+
 ## SLO Targets
 
 | Metric | Baseline | Optimized |
@@ -154,6 +181,26 @@ docker compose --profile optimized --profile observability up -d
 | Max TPS | < 100 | > 300 |
 | Cache Hit Rate | N/A | > 80% |
 | Availability | — | 99.5% non-5xx |
+
+## Load Test Evidence
+
+The repo includes captured screenshots for optimized Kubernetes and cloud demonstration runs.
+
+Kubernetes Grafana dashboard:
+
+![Kubernetes Grafana dashboard](docs/k8s-grafana.png)
+
+Kubernetes k6 load test:
+
+![Kubernetes k6 load test](docs/k8s-k6.png)
+
+Cloud Grafana dashboard:
+
+![Cloud Grafana dashboard](docs/cloud-grafana.png)
+
+Cloud k6 load test:
+
+![Cloud k6 load test](docs/cloud-k6.jpeg)
 
 ## Project Structure
 
@@ -172,12 +219,16 @@ banking-peak-load-prototype/
 ├── seeds/                     # Dummy data generation
 ├── scripts/
 │   ├── load-test/             # k6 scripts (baseline.js, optimized.js)
+│   ├── cloud/                 # Cloud demo helpers
 │   └── setup/                 # Helper scripts (seed, wait-for-db)
 ├── deployments/
+│   ├── ansible/               # Ansible automation for cloud demo hosts
 │   ├── docker/                # Dockerfiles
+│   ├── k8s/                   # Kubernetes manifests
 │   ├── pgbouncer/             # PgBouncer config
 │   ├── prometheus/            # prometheus.yml
-│   └── grafana/               # Dashboard JSON provisioning
+│   ├── grafana/               # Dashboard JSON provisioning
+│   └── terraform/             # Terraform cloud demo
 ├── docs/                      # All documentation
 ├── Makefile
 └── docker-compose.yml
