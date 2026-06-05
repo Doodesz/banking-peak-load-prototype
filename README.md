@@ -74,6 +74,9 @@ Client
 | Optional Cloud Demo | Terraform AWS EC2 demo + Ansible automation |
 | CI | GitHub Actions |
 | Dev tooling | air (live reload), golangci-lint, Nix flake |
+| Optional Orchestration | Kubernetes manifests (`deployments/k8s/`) |
+| CI | GitHub Actions |
+| Dev tooling | air (live reload), golangci-lint, Nix flake |
 
 ## API Endpoints
 
@@ -139,6 +142,7 @@ docker compose --profile optimized --profile observability up -d
 | `make lint` | Run golangci-lint |
 | `make test` | Run unit tests (`go test -v ./...`) |
 | `make build` | Compile binary to `bin/app` |
+| `make seed` | Seed 100K accounts + 1M transactions |
 
 ## Docker Compose Profiles
 
@@ -171,6 +175,17 @@ ansible-playbook -i deployments/ansible/inventories/terraform_inventory.py deplo
 
 Helper scripts for cloud demo operations live in `scripts/cloud/`.
 
+## Kubernetes Manifests
+
+Experimental Kubernetes manifests are included under `deployments/k8s/` for demonstrating the same prototype stack in a cluster. They cover the app, PostgreSQL, PgBouncer, Redis, RabbitMQ, Prometheus, Grafana, ConfigMap/Secret, namespace, and HPA resources.
+
+Review image names, secrets, and environment variables before applying them to a cluster:
+
+```bash
+kubectl apply -f deployments/k8s/namespace.yaml
+kubectl apply -f deployments/k8s/
+```
+
 ## SLO Targets
 
 | Metric | Baseline | Optimized |
@@ -201,6 +216,18 @@ Cloud Grafana dashboard:
 Cloud k6 load test:
 
 ![Cloud k6 load test](docs/cloud-k6.jpeg)
+
+## Load Test Evidence
+
+The PR also includes captured screenshots for the optimized demonstration run.
+
+Grafana dashboard:
+
+![Grafana dashboard](docs/grafana-screenshot.jpeg)
+
+k6 load test:
+
+![k6 load test](docs/k6-loadtest-screenshot.jpeg)
 
 ## Project Structure
 
